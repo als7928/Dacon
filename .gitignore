@@ -1,0 +1,7 @@
+dacon/dataset/*
+dacon/out/*
+dacon/wandb/*
+dacon/test_img/*
+dacon/utils/pretrained/*
+dacon/utils/__pycache__/*
+dacon/baseline_submit.csv

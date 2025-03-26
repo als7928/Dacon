@@ -4,8 +4,7 @@
 
 ## Overview
 ![overview](./image.png) 
-> Approach는 [AugSeg (CVPR'23)](https://arxiv.org/abs/2212.04976)과 동일
-> Segmentation Model은 [Segformer](https://arxiv.org/abs/2105.15203)를 사용
+> Approach는 [AugSeg (CVPR'23)](https://arxiv.org/abs/2212.04976)과 동일, Segmentation Model은 [Segformer](https://arxiv.org/abs/2105.15203)를 사용
 
 
 

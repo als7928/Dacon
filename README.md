@@ -4,9 +4,7 @@
 
 ## Overview
 ![overview](./image.png) 
-> Approach는 [AugSeg (CVPR'23)](https://arxiv.org/abs/2212.04976)과 동일, Segmentation Model은 [Segformer](https://arxiv.org/abs/2105.15203)를 사용
-
-
+> Approach는 [AugSeg (CVPR'23)](https://arxiv.org/abs/2212.04976)과 동일, Segmentation Model은 [Segformer (NeurIPS, 2021)](https://proceedings.neurips.cc/paper/2021/file/64f1f27bf1b4ec22924fd0acb550c235-Paper.pdf)를 사용
 
 1. Warm-up Epoch
     - teacher 모델은 student 모델 파라미터를 clone
@@ -15,7 +13,7 @@
 2. Main Training
     - source (labeled)와 target (unlabeled) 데이터 병렬 학습
     - teacher 모델로 pseudo-label 생성 후, confidence 기반 filtering
-    - Adaptive CutMix 적용: target 이미지 일부를 source 이미지와 합성
+    - Adaptive CutMix 적용: target 이미지 일부를 source 이미지와 합성 -> (Source와 Target 도메인의 분포 차이를 줄이기 위함)
     - student 모델로 supervised + unsupervised loss 계산
     - EMA 업데이트로 teacher 모델 지속적으로 개선
 

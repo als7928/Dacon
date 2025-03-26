@@ -3,6 +3,11 @@
 
 
 ## Overview
+![overview](./image.png) 
+> Approach는 [AugSeg (CVPR'23)](https://arxiv.org/abs/2212.04976)과 동일
+> Segmentation Model은 [Segformer](https://arxiv.org/abs/2105.15203)를 사용
+
+
 
 1. Warm-up Epoch
     - teacher 모델은 student 모델 파라미터를 clone
@@ -22,18 +27,18 @@
 
 ## Environment
 ```
-    pip install torchvision==0.8.2
-    pip install timm==0.3.2
-    pip install mmcv-full==1.2.7
-    pip install opencv-python==4.5.1.48
-    pip install albumentations
-    pip install transformers
-    cd SegFormer && pip install -e . --user
+pip install torchvision==0.8.2
+pip install timm==0.3.2
+pip install mmcv-full==1.2.7
+pip install opencv-python==4.5.1.48
+pip install albumentations
+pip install transformers
+cd SegFormer && pip install -e . --user
 ```
 Other requirements: 
 
 ```
-    pip install wandb 
+pip install wandb 
 ```
 
 ## Run

@@ -20,7 +20,7 @@
     - 테스트 이미지에 대해 예측한 마스크를 RLE 인코딩하여 제출 파일 (.csv) 생성
 
 
-## Libararies  
+## Environment
 ```
     pip install torchvision==0.8.2
     pip install timm==0.3.2

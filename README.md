@@ -1,4 +1,4 @@
-# Dacon_SamsungCapstone
+# Dacon 
 2023 Samsung AI Challenge : Camera-Invariant Domain Adaptation
 
 

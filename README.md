@@ -21,7 +21,7 @@
 
 
 ## Libararies  
-'''
+```
     pip install torchvision==0.8.2
     pip install timm==0.3.2
     pip install mmcv-full==1.2.7
@@ -29,13 +29,15 @@
     pip install albumentations
     pip install transformers
     cd SegFormer && pip install -e . --user
-'''
+```
 Other requirements: 
-'''
+
+```
     pip install wandb 
-'''
+```
+
 ## Run
-'''
+```
 python -u main.py --epoch 100 --resize 512 --lr 0.00006 --batch_size 8 --datadir ./dataset --outdir "./out" --warmup $0 or 1$
-'''
-if you want to log, use $--wandb$ flag.
+``````
+if you want to log, use ``--wandb`` flag.

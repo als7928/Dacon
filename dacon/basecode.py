@@ -1,4 +1,5 @@
 import os
+import cv2
 from PIL import Image
 import pandas as pd
 import numpy as np
@@ -9,12 +10,12 @@ import torch
 import torch.nn as nn
 from torch.utils.data import Dataset, DataLoader
 from torchvision import transforms
-import torch.nn.functional as nnf
+
 from tqdm import tqdm
 import albumentations as A
 from albumentations.pytorch import ToTensorV2
-from proj.Dacon.dacon.utils.segformer_old import Segformer
-from utils.dataloader import CustomDataset, Target
+from utils.uNet import UNet
+from utils.dataloader import CustomDataset
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
 parser = argparse.ArgumentParser(description="Dacon")
@@ -67,36 +68,17 @@ transform = A.Compose(
 
 dataset = CustomDataset(csv_file=  os.path.join(args.datadir, 'train_source.csv'), transform=transform)
 dataloader = DataLoader(dataset, batch_size=args.batch_size, shuffle=True, num_workers=4)
-val_dataset = CustomDataset(csv_file=  os.path.join(args.datadir, 'val_source.csv'), transform=transform)
-val_dataloader = DataLoader(val_dataset, batch_size=args.batch_size, shuffle=True, num_workers=4)
-target_data = Target(csv_file= os.path.join(args.datadir, 'train_target.csv'), transform=transform)
-target_loader = DataLoader(dataset, batch_size=args.batch_size, suffle=True, num_workers=4)
+
 
 
 # model 초기화
-model = Segformer(
-    dims = (32, 64, 160, 256),      # dimensions of each stage
-    heads = (1, 2, 5, 8),           # heads of each stage
-    ff_expansion = (8, 8, 4, 4),    # feedforward expansion factor of each stage
-    reduction_ratio = (8, 4, 2, 1), # reduction ratio of each stage for efficient attention
-    num_layers = 2,                 # num layers of each stage
-    decoder_dim = 256,              # decoder dimension
-    num_classes = 13                 # number of segmentation classes
-).to(device)
-
-# Print model's state_dict
-print("Model's state_dict:")
-for param_tensor in model.state_dict():
-    print(param_tensor, "\t", model.state_dict()[param_tensor].size())
+model = UNet().to(device)
 
 # loss function과 optimizer 정의
 criterion = torch.nn.CrossEntropyLoss()
 optimizer = torch.optim.Adam(model.parameters(), lr=args.lr)
 
 # training loop
-best_loss = 1000
-patience_limit = 3
-patience_count = 0
 for epoch in range(args.epochs):  # 에폭
     model.train()
     epoch_loss = 0
@@ -106,39 +88,21 @@ for epoch in range(args.epochs):  # 에폭
 
         optimizer.zero_grad()
         outputs = model(images)
-        outputs = nnf.interpolate(outputs, size=(args.resize, args.resize), mode='bicubic', align_corners=True) # 일단 True로
-        loss = criterion(outputs, masks.squeeze(1)) # outputs: [16, 13, 53*4, 53*4], target [16, 224, 224]
+        print(outputs.size(), masks.size())
+        loss = criterion(outputs, masks.squeeze(1))
         loss.backward()
         optimizer.step()
 
         epoch_loss += loss.item()
-    
-    # validation
-    model.eval()
-    val_loss = 0
-    for image, mask in val_dataloader:
-        image = image.float().to(device)
-        mask = mask.long().to(device)
-        y_pred = model(image)
-        y_pred = nnf.interpolate(y_pred, size=(args.resize, args.resize), mode='bicubic', align_corners = True)
-        loss = criterion(y_pred, mask.squeeze(1))
-        val_loss += loss.item()
-    epoch_loss /= len(dataloader)
-    val_loss /= len(val_dataloader)
-    wandb.log({"train_loss": epoch_loss, "val_loss": val_loss})
+    wandb.log({"train_loss": epoch_loss/len(dataloader)})
 
-    print(f'Epoch {epoch+1}, train_Loss: {epoch_loss}, val_loss: {val_loss}')
+    print(f'Epoch {epoch+1}, train_Loss: {epoch_loss/len(dataloader)}')
 
-    if val_loss > best_loss:
-        patience_count += 1
-        if patience_count >= patience_limit:
-            break
-    else:
-        best_loss = val_loss
-        patience_count = 0
-        # Save Models
-        torch.save(model.state_dict(), os.path.join(args.outdir, starttime + '_best.pt'))
-        print(f'Model has been saved in {os.path.join(args.outdir, starttime)}_best.pt')
+# Save Models
+print(f'Model has been saved in {os.path.join(args.outdir, starttime)}.pt')
+torch.save(model.state_dict(), os.path.join(args.outdir, starttime + '.pt'))
+
+
 
 # Evaluation
 
@@ -151,7 +115,6 @@ with torch.no_grad():
     for images in tqdm(test_dataloader):
         images = images.float().to(device)
         outputs = model(images)
-        outputs = nnf.interpolate(outputs, size=(args.resize, args.resize), mode='bicubic', align_corners=True)
         outputs = torch.softmax(outputs, dim=1).cpu()
         outputs = torch.argmax(outputs, dim=1).numpy()
         # batch에 존재하는 각 이미지에 대해서 반복

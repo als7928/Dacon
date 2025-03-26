@@ -3,7 +3,7 @@ import albumentations as A
 import numpy as np
     
 test_img_o = cv2.imread('./dataset/test_image/TEST_0284.png', cv2.IMREAD_GRAYSCALE)
-# test_img_o = cv2.resize(test_img_o, (512,512))ㅊ
+# test_img_o = cv2.resize(test_img_o, (512,512))
 target_img_o = cv2.imread('./dataset/train_target_image/TRAIN_TARGET_2153.png', cv2.IMREAD_GRAYSCALE)
 # target_img_o = cv2.resize(target_img_o, (512,512))
 

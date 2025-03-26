@@ -16,7 +16,7 @@ from torch.optim.lr_scheduler import CosineAnnealingWarmRestarts, CyclicLR, Expo
 from tqdm import tqdm
 import albumentations as A
 from albumentations.pytorch import ToTensorV2
-from proj.Dacon.dacon.utils.segformer_old import Segformer
+from utils.segformer_old import Segformer
 from utils.dataloader import CustomDataset, Target
 from utils.augseg import *
 from einops import rearrange
@@ -144,29 +144,6 @@ teacher_model = SegformerForSemanticSegmentation.from_pretrained("nvidia/segform
 student_model = SegformerForSemanticSegmentation.from_pretrained("nvidia/segformer-b5-finetuned-cityscapes-1024-1024").to(device)
 
 
-# student_model 초기화
-# student_model = Segformer(
-#     dims = (32, 64, 160, 256),      # dimensions of each stage
-#     heads = (1, 2, 5, 8),           # heads of each stage
-#     ff_expansion = (8, 8, 4, 4),    # feedforward expansion factor of each stage
-#     reduction_ratio = (8, 4, 2, 1), # reduction ratio of each stage for efficient attention
-#     num_layers = 2,                 # num layers of each stage
-#     decoder_dim = 256,              # decoder dimension
-#     num_classes = 13                 # number of segmentation classes
-# ).to(device)
-
-
-# teacher_model 초기화
-# teacher_model = Segformer(
-#     dims = (32, 64, 160, 256),      # dimensions of each stage
-#     heads = (1, 2, 5, 8),           # heads of each stage
-#     ff_expansion = (8, 8, 4, 4),    # feedforward expansion factor of each stage
-#     reduction_ratio = (8, 4, 2, 1), # reduction ratio of each stage for efficient attention
-#     num_layers = 2,                 # num layers of each stage
-#     decoder_dim = 256,              # decoder dimension
-#     num_classes = 13                 # number of segmentation classes
-# ).to(device)
-
 for p in teacher_model.parameters():
     p.requires_grad = False
 
@@ -267,24 +244,7 @@ for epoch in range(args.epochs):  # 에폭
 
             if np.random.uniform(0,1) < 0.5:
                 target_strong, p_t, p_t_logit = cut_mix_label_adaptive(target_strong, p_t, p_t_logit, source_image, source_mask.squeeze(1), confidence)
-                # save_image(target_strong, './test_img/cut_mix_target.png')
-            #A_r(random intensity-based augmentation)구현 코드
-            #target_image_ar은 target_image를 np.array로 바꾸어 Ar을 적용하기 위한 변수
-            #target_image를 Tensor 변수로 남겨놓기 위함
-            #image_un=image_unnorm(target_image[0].squeeze())
-            #img=img_tr(image_un)
-            #img.save('./test_img/Cutmix_target.png')
-            # target_image_ar=np.array(target_image_ar,dtype=np.uint8).cpu()#numpy[b c h w]
-            # for i in range(len(target_image)):#batch size만큼 반복
-            #     target_array=[] #data[c h w]를 저장해 Ar을 적용하기 위한 변수
-            #     target_array=target_image_ar[i].squeeze() #[b c h w] -> [c h w]
-            #     target_array=np.transpose(target_array,(1,2,0))#[c h w]->[h w c](transform_A_r의 input형식)
-            #     target_array=transform_A_r(image=target_array) # [h w c]->[c h w]
-            #     target_array=target_array['image'] #[c h w]
-            #     target_image[i]=target_array #target_image: [b c h w]
-                #image_un=image_unnorm(target_array)
-                #img=img_tr(image_un)
-                #img.save('./test_img/Ar_Aa_target.png')
+                
 
             
             # 3. forward concate labeled + unlabeld into student networks
@@ -297,9 +257,7 @@ for epoch in range(args.epochs):  # 에폭
 
             # get supervised loss (l_x)
             l_x = ce_loss(pred_l, source_mask.squeeze(1))
-            # print(f'mask:{source_mask.size()}, squeeze:{source_mask.squeeze(1).size()}')
-            # l_x = F.cross_entropy(pred_l, source_mask, ignore_index=12, reduction="none")
-            
+                               
             # get unsupervised loss (l_u)
             l_u, pseudo_high_ratio = compute_unsupervised_loss_by_threshold(pred_u_strong, p_t.detach(), p_t_logit.detach(), criterion=ce_loss,
                                                                             thresh=0.95, ignore_index=12)
